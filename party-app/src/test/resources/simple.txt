@@ -1,6 +1,6 @@
-A, D
-B, A, C
-C, D
-E, B
-F, C
-G
+Arya Stark, Sansa Stark
+Bran Stark, Arya Stark, Ned Stark
+Ned Stark, Sansa Stark
+Brienne of Tarth, Bran Stark
+Jon Snow, Ned Stark
+Hodor

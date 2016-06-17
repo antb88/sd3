@@ -69,97 +69,274 @@ public class PartyAppTest {
     @Test
     public void simpleInitAllToUnknown() {
         processFile("simple");
-        input.publish("A", null);
+        input.publish("Arya Stark", null);
         verify(output).attendance(map(
-                entry("A", Attendance.UNKNOWN),
-                entry("B", Attendance.UNKNOWN),
-                entry("C", Attendance.UNKNOWN),
-                entry("D", Attendance.UNKNOWN),
-                entry("E", Attendance.UNKNOWN),
-                entry("F", Attendance.UNKNOWN),
-                entry("G", Attendance.UNKNOWN)
+                entry("Arya Stark", Attendance.UNKNOWN),
+                entry("Bran Stark", Attendance.UNKNOWN),
+                entry("Ned Stark", Attendance.UNKNOWN),
+                entry("Sansa Stark", Attendance.UNKNOWN),
+                entry("Brienne of Tarth", Attendance.UNKNOWN),
+                entry("Jon Snow", Attendance.UNKNOWN),
+                entry("Hodor", Attendance.UNKNOWN)
         ));
     }
     @Test
     public void simpleDependencyUnknown() {
         processFile("simple");
-        input.publish("C", true);
-        input.publish("F", false);
-        input.publish("G", false);
+        input.publish("Ned Stark", true);
+        input.publish("Jon Snow", false);
+        input.publish("Hodor", false);
         verify(output).attendance(map(
-                entry("A", Attendance.UNKNOWN),
-                entry("B", Attendance.UNKNOWN),
-                entry("C", Attendance.ATTENDING),
-                entry("D", Attendance.UNKNOWN),
-                entry("E", Attendance.UNKNOWN),
-                entry("F", Attendance.NOT_ATTENDING),
-                entry("G", Attendance.NOT_ATTENDING)
+                entry("Arya Stark", Attendance.UNKNOWN),
+                entry("Bran Stark", Attendance.UNKNOWN),
+                entry("Ned Stark", Attendance.ATTENDING),
+                entry("Sansa Stark", Attendance.UNKNOWN),
+                entry("Brienne of Tarth", Attendance.UNKNOWN),
+                entry("Jon Snow", Attendance.NOT_ATTENDING),
+                entry("Hodor", Attendance.NOT_ATTENDING)
+        ));
+    }
+
+    @Test
+    public void simpleAllDefinite() {
+        processFile("simple");
+        input.publish("Arya Stark", true);
+        input.publish("Bran Stark", false);
+        input.publish("Ned Stark", true);
+        input.publish("Sansa Stark", false);
+        input.publish("Brienne of Tarth", true);
+        input.publish("Jon Snow", false);
+        input.publish("Hodor", false);
+        verify(output).attendance(map(
+                entry("Arya Stark", Attendance.ATTENDING),
+                entry("Bran Stark", Attendance.NOT_ATTENDING),
+                entry("Ned Stark", Attendance.ATTENDING),
+                entry("Sansa Stark", Attendance.NOT_ATTENDING),
+                entry("Brienne of Tarth", Attendance.ATTENDING),
+                entry("Jon Snow", Attendance.NOT_ATTENDING),
+                entry("Hodor", Attendance.NOT_ATTENDING)
         ));
     }
 
     @Test
     public void dependencyProbablyYes() {
         processFile("simple");
-        input.publish("D", true);
+        input.publish("Sansa Stark", true);
         verify(output).attendance(map(
-                entry("A", Attendance.PROBABLY_ATTENDING),
-                entry("B", Attendance.PROBABLY_ATTENDING),
-                entry("C", Attendance.PROBABLY_ATTENDING),
-                entry("D", Attendance.ATTENDING),
-                entry("E", Attendance.PROBABLY_ATTENDING),
-                entry("F", Attendance.PROBABLY_ATTENDING),
-                entry("G", Attendance.UNKNOWN)
+                entry("Arya Stark", Attendance.PROBABLY_ATTENDING),
+                entry("Bran Stark", Attendance.PROBABLY_ATTENDING),
+                entry("Ned Stark", Attendance.PROBABLY_ATTENDING),
+                entry("Sansa Stark", Attendance.ATTENDING),
+                entry("Brienne of Tarth", Attendance.PROBABLY_ATTENDING),
+                entry("Jon Snow", Attendance.PROBABLY_ATTENDING),
+                entry("Hodor", Attendance.UNKNOWN)
         ));
     }
 
     @Test
     public void simpleProbablyYes() {
         processFile("simple");
-        input.publish("A", false);
-        input.publish("B", true);
-        input.publish("D", true);
-        input.publish("G", true);
+        input.publish("Arya Stark", false);
+        input.publish("Bran Stark", true);
+        input.publish("Sansa Stark", true);
+        input.publish("Hodor", true);
         verify(output).attendance(map(
-                entry("A", Attendance.NOT_ATTENDING),
-                entry("B", Attendance.ATTENDING),
-                entry("C", Attendance.PROBABLY_ATTENDING),
-                entry("D", Attendance.ATTENDING),
-                entry("E", Attendance.PROBABLY_ATTENDING),
-                entry("F", Attendance.PROBABLY_ATTENDING),
-                entry("G", Attendance.ATTENDING)
+                entry("Arya Stark", Attendance.NOT_ATTENDING),
+                entry("Bran Stark", Attendance.ATTENDING),
+                entry("Ned Stark", Attendance.PROBABLY_ATTENDING),
+                entry("Sansa Stark", Attendance.ATTENDING),
+                entry("Brienne of Tarth", Attendance.PROBABLY_ATTENDING),
+                entry("Jon Snow", Attendance.PROBABLY_ATTENDING),
+                entry("Hodor", Attendance.ATTENDING)
         ));
     }
 
     @Test
     public void dependencyProbablyNo() {
         processFile("simple");
-        input.publish("C", true);
-        input.publish("D", false);
+        input.publish("Ned Stark", true);
+        input.publish("Sansa Stark", false);
         verify(output).attendance(map(
-                entry("A", Attendance.PROBABLY_NOT_ATTENDING),
-                entry("B", Attendance.PROBABLY_NOT_ATTENDING),
-                entry("C", Attendance.ATTENDING),
-                entry("D", Attendance.NOT_ATTENDING),
-                entry("E", Attendance.PROBABLY_NOT_ATTENDING),
-                entry("F", Attendance.PROBABLY_ATTENDING),
-                entry("G", Attendance.UNKNOWN)
+                entry("Arya Stark", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("Bran Stark", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("Ned Stark", Attendance.ATTENDING),
+                entry("Sansa Stark", Attendance.NOT_ATTENDING),
+                entry("Brienne of Tarth", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("Jon Snow", Attendance.PROBABLY_ATTENDING),
+                entry("Hodor", Attendance.UNKNOWN)
         ));
     }
 
     @Test
     public void simpleProbablyNo() {
         processFile("simple");
-        input.publish("B", false);
-        input.publish("C", true);
-        input.publish("D", false);
+        input.publish("Bran Stark", false);
+        input.publish("Ned Stark", true);
+        input.publish("Sansa Stark", false);
         verify(output).attendance(map(
-                entry("A", Attendance.PROBABLY_NOT_ATTENDING),
-                entry("B", Attendance.NOT_ATTENDING),
-                entry("C", Attendance.ATTENDING),
-                entry("D", Attendance.NOT_ATTENDING),
-                entry("E", Attendance.PROBABLY_NOT_ATTENDING),
-                entry("F", Attendance.PROBABLY_ATTENDING),
-                entry("G", Attendance.UNKNOWN)
+                entry("Arya Stark", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("Bran Stark", Attendance.NOT_ATTENDING),
+                entry("Ned Stark", Attendance.ATTENDING),
+                entry("Sansa Stark", Attendance.NOT_ATTENDING),
+                entry("Brienne of Tarth", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("Jon Snow", Attendance.PROBABLY_ATTENDING),
+                entry("Hodor", Attendance.UNKNOWN)
+        ));
+    }
+
+    @Test
+    public void simpleChangeYesToNo() {
+        processFile("simple");
+        input.publish("Sansa Stark", true);
+        input.publish("Hodor", true);
+        verify(output).attendance(map(
+                entry("Arya Stark", Attendance.PROBABLY_ATTENDING),
+                entry("Bran Stark", Attendance.PROBABLY_ATTENDING),
+                entry("Ned Stark", Attendance.PROBABLY_ATTENDING),
+                entry("Sansa Stark", Attendance.ATTENDING),
+                entry("Brienne of Tarth", Attendance.PROBABLY_ATTENDING),
+                entry("Jon Snow", Attendance.PROBABLY_ATTENDING),
+                entry("Hodor", Attendance.ATTENDING)
+        ));
+
+        input.publish("Hodor", false);
+        verify(output).attendance(map(
+                entry("Arya Stark", Attendance.PROBABLY_ATTENDING),
+                entry("Bran Stark", Attendance.PROBABLY_ATTENDING),
+                entry("Ned Stark", Attendance.PROBABLY_ATTENDING),
+                entry("Sansa Stark", Attendance.ATTENDING),
+                entry("Brienne of Tarth", Attendance.PROBABLY_ATTENDING),
+                entry("Jon Snow", Attendance.PROBABLY_ATTENDING),
+                entry("Hodor", Attendance.NOT_ATTENDING)
+        ));
+
+        input.publish("Sansa Stark", false);
+        verify(output).attendance(map(
+                entry("Arya Stark", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("Bran Stark", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("Ned Stark", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("Sansa Stark", Attendance.NOT_ATTENDING),
+                entry("Brienne of Tarth", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("Jon Snow", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("Hodor", Attendance.NOT_ATTENDING)
+        ));
+
+
+    }
+
+    @Test
+    public void simpleChangeNoToYes() {
+        processFile("simple");
+        input.publish("Bran Stark", false);
+        input.publish("Sansa Stark", false);
+        verify(output).attendance(map(
+                entry("Arya Stark", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("Bran Stark", Attendance.NOT_ATTENDING),
+                entry("Ned Stark", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("Sansa Stark", Attendance.NOT_ATTENDING),
+                entry("Brienne of Tarth", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("Jon Snow", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("Hodor", Attendance.UNKNOWN)
+        ));
+
+        input.publish("Sansa Stark", true);
+        verify(output).attendance(map(
+                entry("Arya Stark", Attendance.PROBABLY_ATTENDING),
+                entry("Bran Stark", Attendance.NOT_ATTENDING),
+                entry("Ned Stark", Attendance.PROBABLY_ATTENDING),
+                entry("Sansa Stark", Attendance.ATTENDING),
+                entry("Brienne of Tarth", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("Jon Snow", Attendance.PROBABLY_ATTENDING),
+                entry("Hodor", Attendance.UNKNOWN)
+        ));
+
+        input.publish("Bran Stark", true);
+        verify(output).attendance(map(
+                entry("Arya Stark", Attendance.PROBABLY_ATTENDING),
+                entry("Bran Stark", Attendance.ATTENDING),
+                entry("Ned Stark", Attendance.PROBABLY_ATTENDING),
+                entry("Sansa Stark", Attendance.ATTENDING),
+                entry("Brienne of Tarth", Attendance.PROBABLY_ATTENDING),
+                entry("Jon Snow", Attendance.PROBABLY_ATTENDING),
+                entry("Hodor", Attendance.UNKNOWN)
+        ));
+    }
+
+    @Test
+    public void simpleChangeYesToUnknown() {
+        processFile("simple");
+        input.publish("Hodor", true);
+        input.publish("Sansa Stark", true);
+        verify(output).attendance(map(
+                entry("Arya Stark", Attendance.PROBABLY_ATTENDING),
+                entry("Bran Stark", Attendance.PROBABLY_ATTENDING),
+                entry("Ned Stark", Attendance.PROBABLY_ATTENDING),
+                entry("Sansa Stark", Attendance.ATTENDING),
+                entry("Brienne of Tarth", Attendance.PROBABLY_ATTENDING),
+                entry("Jon Snow", Attendance.PROBABLY_ATTENDING),
+                entry("Hodor", Attendance.ATTENDING)
+        ));
+
+        input.publish("Hodor", null);
+        verify(output).attendance(map(
+                entry("Arya Stark", Attendance.PROBABLY_ATTENDING),
+                entry("Bran Stark", Attendance.PROBABLY_ATTENDING),
+                entry("Ned Stark", Attendance.PROBABLY_ATTENDING),
+                entry("Sansa Stark", Attendance.ATTENDING),
+                entry("Brienne of Tarth", Attendance.PROBABLY_ATTENDING),
+                entry("Jon Snow", Attendance.PROBABLY_ATTENDING),
+                entry("Hodor", Attendance.UNKNOWN)
+        ));
+
+        input.publish("Sansa Stark", null);
+        verify(output).attendance(map(
+                entry("Arya Stark", Attendance.UNKNOWN),
+                entry("Bran Stark", Attendance.UNKNOWN),
+                entry("Ned Stark", Attendance.UNKNOWN),
+                entry("Sansa Stark", Attendance.UNKNOWN),
+                entry("Brienne of Tarth", Attendance.UNKNOWN),
+                entry("Jon Snow", Attendance.UNKNOWN),
+                entry("Hodor", Attendance.UNKNOWN)
+        ));
+
+
+    }
+
+    @Test
+    public void simpleChangeNoToUnknown() {
+        processFile("simple");
+        input.publish("Sansa Stark", false);
+        input.publish("Bran Stark", false);
+        verify(output).attendance(map(
+                entry("Arya Stark", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("Bran Stark", Attendance.NOT_ATTENDING),
+                entry("Ned Stark", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("Sansa Stark", Attendance.NOT_ATTENDING),
+                entry("Brienne of Tarth", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("Jon Snow", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("Hodor", Attendance.UNKNOWN)
+        ));
+
+        input.publish("Sansa Stark", null);
+        verify(output).attendance(map(
+                entry("Arya Stark", Attendance.UNKNOWN),
+                entry("Bran Stark", Attendance.NOT_ATTENDING),
+                entry("Ned Stark", Attendance.UNKNOWN),
+                entry("Sansa Stark", Attendance.UNKNOWN),
+                entry("Brienne of Tarth", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("Jon Snow", Attendance.UNKNOWN),
+                entry("Hodor", Attendance.UNKNOWN)
+        ));
+
+        input.publish("Bran Stark", null);
+        verify(output).attendance(map(
+                entry("Arya Stark", Attendance.UNKNOWN),
+                entry("Bran Stark", Attendance.UNKNOWN),
+                entry("Ned Stark", Attendance.UNKNOWN),
+                entry("Sansa Stark", Attendance.UNKNOWN),
+                entry("Brienne of Tarth", Attendance.UNKNOWN),
+                entry("Jon Snow", Attendance.UNKNOWN),
+                entry("Hodor", Attendance.UNKNOWN)
         ));
     }
 
