@@ -4,6 +4,7 @@ import static org.junit.Assert.*;
 
 import java.util.*;
 
+import com.google.common.collect.Sets;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -477,18 +478,38 @@ public class GraphTest {
 	}
 
 	@Test
-	public void reachableVerticesComplexGraphCorrect() {
+	public void reachableFromVertex() {
 		Graph<Integer> $ = createComplex();
-		Assert.assertEquals($.getAllReachableFrom(5),	new HashSet<>(Arrays.asList(5,2,9,10,11)));
-		Assert.assertEquals($.getAllReachableFrom(3),	new HashSet<>(Arrays.asList(3,8,9,10)));
-		Assert.assertEquals($.getAllReachableFrom(7),   new HashSet<>(Arrays.asList(7,8,2,9,10,11)));
-		Assert.assertEquals($.getAllReachableFrom(8),	new HashSet<>(Arrays.asList(8,9)));
-		Assert.assertEquals($.getAllReachableFrom(10),	new HashSet<>(Collections.singletonList(10)));
-		Assert.assertEquals($.getAllReachableFrom(11),	new HashSet<>(Arrays.asList(2,9,10,11)));
-		Assert.assertEquals($.getAllReachableFrom(2),	new HashSet<>(Collections.singletonList(2)));
-		Assert.assertEquals($.getAllReachableFrom(9),	new HashSet<>(Collections.singletonList(9)));
-
+		Assert.assertEquals($.getAllReachableFrom(5), Sets.newHashSet(5,2,9,10,11));
+		Assert.assertEquals($.getAllReachableFrom(3), Sets.newHashSet(3,8,9,10));
+		Assert.assertEquals($.getAllReachableFrom(7), Sets.newHashSet(7,8,2,9,10,11));
+		Assert.assertEquals($.getAllReachableFrom(8), Sets.newHashSet(8,9));
+		Assert.assertEquals($.getAllReachableFrom(10), Sets.newHashSet(10));
+		Assert.assertEquals($.getAllReachableFrom(11), Sets.newHashSet(2,9,10,11));
+		Assert.assertEquals($.getAllReachableFrom(2), Sets.newHashSet(2));
+		Assert.assertEquals($.getAllReachableFrom(9), Sets.newHashSet(9));
 	}
+
+    @Test
+    public void removeIncomingEdges() {
+        Graph<Integer> $ = createComplex();
+        $.removeIncomingEdgesOf(11);
+        Assert.assertFalse("should not contain edge 5->11", $.getFathers(11).contains(5));
+        Assert.assertFalse("should not contain edge 5->11", $.getChildren(5).contains(11));
+        Assert.assertFalse("should not contain edge 7->11", $.getFathers(11).contains(7));
+        Assert.assertFalse("should not contain edge 7->11", $.getChildren(7).contains(11));
+    }
+    @Test
+    public void addEdgesToVertex() {
+        Graph<Integer> $ = createComplex();
+        Assert.assertFalse("should not contain edge 3->11", $.getFathers(11).contains(3));
+        Assert.assertFalse("should not contain edge 8->11", $.getFathers(11).contains(8));
+        Assert.assertFalse("should not contain edge 3->11", $.getFathers(11).contains(10));
+        $.addEdgesTo(11, Sets.newHashSet(3,8,10));
+        Assert.assertTrue("should  contain edge 3->11", $.getFathers(11).contains(3));
+        Assert.assertTrue("should contain edge 8->11", $.getFathers(11).contains(8));
+        Assert.assertTrue("should contain edge 3->11", $.getFathers(11).contains(10));
+    }
 
 	private Graph<Integer> createComplex() {
 		Graph<Integer> g = new Graph<>();

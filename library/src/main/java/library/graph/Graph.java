@@ -211,7 +211,6 @@ public class Graph<T>{
 
         if (nodes.containsKey(vertex)) {
             queue.add(vertex);
-            reachable.add(vertex);
         }
         while (!queue.isEmpty()) {
             T v = queue.remove(0);
