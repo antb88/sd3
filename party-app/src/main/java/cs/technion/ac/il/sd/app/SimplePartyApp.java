@@ -22,7 +22,7 @@ public class SimplePartyApp implements PartyApp{
     private final Input input;
     private final Output output;
     private final Graph<String> graph;
-    private  Map<String, Attendance> attendance;
+    private Map<String, Attendance> attendance;
     private Configuration configuration;
 
     @Inject
@@ -66,20 +66,17 @@ public class SimplePartyApp implements PartyApp{
     }
 
     private void addDependenciesToGraph(String invitee) {
-        configuration.getDependenciesOf(invitee)
-                .forEach(dependency -> graph.addEdge(dependency,invitee));
+        graph.addEdgesTo(invitee, configuration.getDependenciesOf(invitee));
     }
 
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
     private SimplePartyApp updateAttendance(String name, Optional<Boolean> attendance_) {
         if (attendance_.isPresent()) {
             graph.removeIncomingEdgesOf(name);
-        } else {
-            if (alreadyDeclaredAttendance(name)){
-                graph.addEdgesTo(name, configuration.getDependenciesOf(name));
-            }
+        } else if (alreadyDeclaredAttendance(name)) {
+            graph.addEdgesTo(name, configuration.getDependenciesOf(name));
         }
-        attendance.put(name,toAttendance(attendance_));
+        attendance.put(name, toAttendance(attendance_));
         return this;
     }
 
@@ -119,7 +116,6 @@ public class SimplePartyApp implements PartyApp{
             return attendance;
 
         Set<String> dependencies = configuration.getDependenciesOf(invitee);
-
         if (!dependencies.isEmpty() && dependencies.stream().allMatch(this::attendingOrProbablyAttending))
             return Attendance.PROBABLY_ATTENDING;
 
@@ -150,6 +146,4 @@ public class SimplePartyApp implements PartyApp{
         }
         return attendance.get() ? Attendance.ATTENDING : Attendance.NOT_ATTENDING;
     }
-
-
 }
