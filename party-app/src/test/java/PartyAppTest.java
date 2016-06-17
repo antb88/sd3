@@ -10,7 +10,6 @@ import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
-import org.mockito.InOrder;
 import org.mockito.Mockito;
 
 import java.io.File;
@@ -22,6 +21,7 @@ import static org.mockito.Mockito.verify;
 /**
  * Created by Nati on 6/17/2016.
  */
+@SuppressWarnings("unchecked")
 public class PartyAppTest {
     class TestInput implements Input {
         private final List<BiConsumer<String, Optional<Boolean>>> listener = new LinkedList<>();
@@ -46,7 +46,7 @@ public class PartyAppTest {
         }
     });
 
-    public Map<String, Attendance> map(Map.Entry<String, Attendance>... expected) {
+    private Map<String, Attendance> map(Map.Entry<String, Attendance>... expected) {
         Map<String, Attendance> map = new HashMap<>();
         for (Map.Entry<String, Attendance> e : expected)
             map.put(e.getKey(), e.getValue());
