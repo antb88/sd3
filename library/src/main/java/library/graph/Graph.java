@@ -9,6 +9,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import library.graph.exception.ChildAlreadyExistsException;
 import library.graph.exception.CycleException;
@@ -40,12 +42,12 @@ public class Graph<T>{
 		return nodes.containsKey(data);
 	}
 	
-	public void addNode(T data) throws NodeAlreadyExistsException {
+	public void addNode(T data)  {
 		Node<T> newNode = new Node<T>(data);
-		if(nodes.containsKey(data)) {
-			throw new NodeAlreadyExistsException("Error");
+		if(!nodes.containsKey(data)) {
+            nodes.put(data,newNode);
 		}
-		nodes.put(data,newNode);
+
 	}
 	
 	private Node<T> getNodeFromT(T data,String msg) throws NodeDoesntExistsException {
@@ -56,39 +58,57 @@ public class Graph<T>{
 		return node;
 	}
 	
-	public void addEdge(T father,T child) throws NodeDoesntExistsException, ChildAlreadyExistsException {	
-		Node<T> fatherNode = getNodeFromT(father,fatherErrorMsg);
-		Node<T> childNode = getNodeFromT(child,childErrorMsg);
-		fatherNode.addChild(childNode);
-		edges.add(new Pair<Node<T>,Node<T>>(fatherNode, childNode));
+	public void addEdge(T father,T child) {
+		try {
+            Node<T> fatherNode = getNodeFromT(father,fatherErrorMsg);
+            Node<T> childNode = getNodeFromT(child,childErrorMsg);
+            fatherNode.addChild(childNode);
+            edges.add(new Pair<Node<T>,Node<T>>(fatherNode, childNode));
+        }
+        catch (Exception e ) {
+            throw new IllegalArgumentException();
+        }
+
 	}
 	
 	public Node<T> getNode(T data){
 		return nodes.get(data);
 	}
 	
-	public void deleteEdge(T father,T child) throws NodeDoesntExistsException {
-		Node<T> fatherNode = getNodeFromT(father,fatherErrorMsg);
-		Node<T> childNode = getNodeFromT(child,childErrorMsg);
-		fatherNode.deleteChild(child);
-		childNode.deleteFather(father);
-		edges.remove(new Pair<Node<T>,Node<T>>(fatherNode,childNode));
+	public void deleteEdge(T father,T child)  {
+        try {
+            Node<T> fatherNode = getNodeFromT(father,fatherErrorMsg);
+            Node<T> childNode = getNodeFromT(child,childErrorMsg);
+            fatherNode.deleteChild(child);
+            childNode.deleteFather(father);
+            edges.remove(new Pair<Node<T>,Node<T>>(fatherNode,childNode));
+        } catch (NodeDoesntExistsException e) {
+            e.printStackTrace();
+        }
+    }
+	
+	public List<T> getChildren(T element)  {
+		List<T> list = new LinkedList<T>();
+        try {
+            for(Node<T> node: getNodeFromT(element,fatherErrorMsg).getChildren()) {
+                list.add(node.getData());
+            }
+        } catch (NodeDoesntExistsException e) {
+
+        }
+        return list;
 	}
 	
-	public List<T> getChildren(T element) throws NodeDoesntExistsException {
+	public List<T> getFathers(T element)  {
 		List<T> list = new LinkedList<T>();
-		for(Node<T> node: getNodeFromT(element,fatherErrorMsg).getChildren()) {
-			list.add(node.getData());
-		}
-		return list;
-	}
-	
-	public List<T> getFathers(T element) throws NodeDoesntExistsException {
-		List<T> list = new LinkedList<T>();
-		for(Node<T> node: getNodeFromT(element,fatherErrorMsg).getFathers()) {
-			list.add(node.getData());
-		}
-		return list;
+        try {
+            for(Node<T> node: getNodeFromT(element,fatherErrorMsg).getFathers()) {
+                list.add(node.getData());
+            }
+        } catch (NodeDoesntExistsException e) {
+
+        }
+        return list;
 	}
 	
 	
@@ -96,19 +116,15 @@ public class Graph<T>{
 	private Graph<T> copyGraph(){
 		Graph<T> newGraph =  new Graph<T>();
 		for(Node<T> n : nodes.values()){
-			try {
-				newGraph.addNode(n.getData());
-			}
-			catch (NodeAlreadyExistsException e) {
-				
-			}
+			newGraph.addNode(n.getData());
+
 		}
 		for (Pair<Node<T>, Node<T>> entry : edges) {
 		    Node<T> father = entry.getLeft();
 		    Node<T> son = entry.getRight();
 		    try {
 				newGraph.addEdge(father.getData(), son.getData());
-			} catch (NodeDoesntExistsException | ChildAlreadyExistsException e) {
+			} catch (Exception e) {
 			}
 		}
 		return newGraph;
@@ -179,4 +195,62 @@ public class Graph<T>{
 			}
 		}
 	}
+
+    public void removeIncomingEdgesOf(T name) {
+        getFathers(name).forEach(v -> deleteEdge(v, name));
+    }
+
+    public void addEdgesTo(T target, Set<T> sources) {
+        sources.forEach(s -> addEdge(s,target));
+    }
+
+    public Set<T> getAllReachableFrom(T vertex) {
+        Set<T> reachable = new HashSet<>();
+        Set<T> traversed = new HashSet<>();
+        List<T> queue = new LinkedList<>();
+
+        if (nodes.containsKey(vertex)) {
+            queue.add(vertex);
+            reachable.add(vertex);
+        }
+        while (!queue.isEmpty()) {
+            T v = queue.remove(0);
+            if (!traversed.contains(v)) {
+                queue.addAll(getChildren(v));
+                traversed.add(v);
+            }
+        }
+    return reachable;
+    }
+
+    public void topologicSort(Consumer<T> onVertexVisit) {
+        Graph<T> newGraph = this.copyGraph();
+        List<T> sorted = new ArrayList<T>();
+        List<Node<T>> sources = new ArrayList<Node<T>>();
+        for(Node<T> node : newGraph.nodes.values()){
+            if(node.getFathers().size() == 0){
+                sources.add(node);
+            }
+        }
+        while(!sources.isEmpty()){
+            Node<T> n = sources.get(0);
+            sources.remove(0);
+            sorted.add(sorted.size(), n.getData());
+            for(Iterator<Node<T>> it = n.getChildren().iterator(); it.hasNext();){
+                Node<T> son = it.next();
+                newGraph.edges.remove(new Pair<>(n, son));
+                it.remove();
+                son.deleteFather(n.getData());
+                if(son.getFathers().size() == 0){
+                    sources.add(son);
+                }
+            }
+        }
+        List<T> unsorted = newGraph.nodes.keySet()
+                .stream()
+                .collect(Collectors.toList());
+
+        sorted.forEach(onVertexVisit);
+        unsorted.forEach(onVertexVisit);
+    }
 }

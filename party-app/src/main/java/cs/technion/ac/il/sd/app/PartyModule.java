@@ -5,6 +5,6 @@ import com.google.inject.AbstractModule;
 public class PartyModule extends AbstractModule {
   @Override
   protected void configure() {
-    bind(PartyApp.class).to(FakeParty.class);
+    bind(PartyApp.class).to(SimplePartyApp.class);
   }
 }
