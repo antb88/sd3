@@ -119,7 +119,7 @@ public class PartyAppTest {
     }
 
     @Test
-    public void dependencyProbablyYes() {
+    public void simpleDependencyProbablyYes() {
         processFile("simple");
         input.publish("Sansa Stark", true);
         verify(output).attendance(map(
@@ -152,7 +152,7 @@ public class PartyAppTest {
     }
 
     @Test
-    public void dependencyProbablyNo() {
+    public void simpleDependencyProbablyNo() {
         processFile("simple");
         input.publish("Ned Stark", true);
         input.publish("Sansa Stark", false);
@@ -340,6 +340,360 @@ public class PartyAppTest {
         ));
     }
 
+    @Test
+    public void cyclicInitAllToUnknown() {
+        processFile("cyclic");
+        input.publish("A", null);
+        verify(output).attendance(map(
+                entry("A", Attendance.UNKNOWN),
+                entry("B", Attendance.UNKNOWN),
+                entry("C", Attendance.UNKNOWN),
+                entry("D", Attendance.UNKNOWN),
+                entry("E", Attendance.UNKNOWN),
+                entry("F", Attendance.UNKNOWN),
+                entry("G", Attendance.UNKNOWN),
+                entry("H", Attendance.UNKNOWN),
+                entry("I", Attendance.UNKNOWN),
+                entry("J", Attendance.UNKNOWN),
+                entry("K", Attendance.UNKNOWN)
+        ));
+    }
+
+    @Test
+    public void cyclicDependencyProbablyYes() {
+        processFile("cyclic");
+        input.publish("I", true);
+        input.publish("B", true);
+        verify(output).attendance(map(
+                entry("A", Attendance.UNKNOWN),
+                entry("B", Attendance.ATTENDING),
+                entry("C", Attendance.PROBABLY_ATTENDING),
+                entry("D", Attendance.PROBABLY_ATTENDING),
+                entry("E", Attendance.PROBABLY_ATTENDING),
+                entry("F", Attendance.UNKNOWN),
+                entry("G", Attendance.UNKNOWN),
+                entry("H", Attendance.PROBABLY_ATTENDING),
+                entry("I", Attendance.ATTENDING),
+                entry("J", Attendance.PROBABLY_ATTENDING),
+                entry("K", Attendance.UNKNOWN)
+        ));
+    }
+
+    @Test
+    public void cyclicDependencyProbablyNo() {
+        processFile("cyclic");
+        input.publish("I", false);
+        input.publish("B", false);
+        verify(output).attendance(map(
+                entry("A", Attendance.UNKNOWN),
+                entry("B", Attendance.NOT_ATTENDING),
+                entry("C", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("D", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("E", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("F", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("G", Attendance.UNKNOWN),
+                entry("H", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("I", Attendance.NOT_ATTENDING),
+                entry("J", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("K", Attendance.UNKNOWN)
+        ));
+    }
+
+    @Test
+    public void cyclicDependencyUnknown() {
+        processFile("cyclic");
+        input.publish("A", true);
+        input.publish("G", true);
+        verify(output).attendance(map(
+                entry("A", Attendance.ATTENDING),
+                entry("B", Attendance.UNKNOWN),
+                entry("C", Attendance.UNKNOWN),
+                entry("D", Attendance.UNKNOWN),
+                entry("E", Attendance.UNKNOWN),
+                entry("F", Attendance.UNKNOWN),
+                entry("G", Attendance.ATTENDING),
+                entry("H", Attendance.UNKNOWN),
+                entry("I", Attendance.UNKNOWN),
+                entry("J", Attendance.UNKNOWN),
+                entry("K", Attendance.UNKNOWN)
+        ));
+    }
+
+    @Test
+    public void cyclicAllDefinite() {
+        processFile("cyclic");
+        input.publish("A", true);
+        input.publish("B", false);
+        input.publish("C", true);
+        input.publish("D", false);
+        input.publish("E", true);
+        input.publish("F", false);
+        input.publish("G", false);
+        input.publish("H", true);
+        input.publish("I", false);
+        input.publish("J", true);
+        input.publish("K", true);
+        verify(output).attendance(map(
+                entry("A", Attendance.ATTENDING),
+                entry("B", Attendance.NOT_ATTENDING),
+                entry("C", Attendance.ATTENDING),
+                entry("D", Attendance.NOT_ATTENDING),
+                entry("E", Attendance.ATTENDING),
+                entry("F", Attendance.NOT_ATTENDING),
+                entry("G", Attendance.NOT_ATTENDING),
+                entry("H", Attendance.ATTENDING),
+                entry("I", Attendance.NOT_ATTENDING),
+                entry("J", Attendance.ATTENDING),
+                entry("K", Attendance.ATTENDING)
+        ));
+    }
+    @Ignore
+    @Test
+    public void cyclicProbablyYes() {
+        processFile("cyclic");
+        input.publish("A", false);
+        input.publish("B", true);
+        input.publish("C", true);
+        input.publish("D", true);
+        verify(output).attendance(map(
+                entry("A", Attendance.UNKNOWN),
+                entry("B", Attendance.UNKNOWN),
+                entry("C", Attendance.UNKNOWN),
+                entry("D", Attendance.UNKNOWN),
+                entry("E", Attendance.UNKNOWN),
+                entry("F", Attendance.UNKNOWN),
+                entry("G", Attendance.UNKNOWN),
+                entry("H", Attendance.UNKNOWN),
+                entry("I", Attendance.UNKNOWN),
+                entry("J", Attendance.UNKNOWN),
+                entry("K", Attendance.UNKNOWN)
+        ));
+    }
+    @Ignore
+    @Test
+    public void cyclicProbablyNo() {
+        processFile("cyclic");
+        input.publish("A", false);
+        input.publish("B", true);
+        input.publish("C", false);
+        verify(output).attendance(map(
+                entry("A", Attendance.UNKNOWN),
+                entry("B", Attendance.UNKNOWN),
+                entry("C", Attendance.UNKNOWN),
+                entry("D", Attendance.UNKNOWN),
+                entry("E", Attendance.UNKNOWN),
+                entry("F", Attendance.UNKNOWN),
+                entry("G", Attendance.UNKNOWN),
+                entry("H", Attendance.UNKNOWN),
+                entry("I", Attendance.UNKNOWN),
+                entry("J", Attendance.UNKNOWN),
+                entry("K", Attendance.UNKNOWN)
+        ));
+    }
+    @Ignore
+    @Test
+    public void cyclicChangeYesToNo() {
+        processFile("cyclic");
+        input.publish("A", true);
+        input.publish("B", true);
+        verify(output).attendance(map(
+                entry("A", Attendance.UNKNOWN),
+                entry("B", Attendance.UNKNOWN),
+                entry("C", Attendance.UNKNOWN),
+                entry("D", Attendance.UNKNOWN),
+                entry("E", Attendance.UNKNOWN),
+                entry("F", Attendance.UNKNOWN),
+                entry("G", Attendance.UNKNOWN),
+                entry("H", Attendance.UNKNOWN),
+                entry("I", Attendance.UNKNOWN),
+                entry("J", Attendance.UNKNOWN),
+                entry("K", Attendance.UNKNOWN)
+        ));
+
+        input.publish("B", false);
+        verify(output).attendance(map(
+                entry("A", Attendance.UNKNOWN),
+                entry("B", Attendance.UNKNOWN),
+                entry("C", Attendance.UNKNOWN),
+                entry("D", Attendance.UNKNOWN),
+                entry("E", Attendance.UNKNOWN),
+                entry("F", Attendance.UNKNOWN),
+                entry("G", Attendance.UNKNOWN),
+                entry("H", Attendance.UNKNOWN),
+                entry("I", Attendance.UNKNOWN),
+                entry("J", Attendance.UNKNOWN),
+                entry("K", Attendance.UNKNOWN)
+        ));
+
+        input.publish("A", false);
+        verify(output).attendance(map(
+                entry("A", Attendance.UNKNOWN),
+                entry("B", Attendance.UNKNOWN),
+                entry("C", Attendance.UNKNOWN),
+                entry("D", Attendance.UNKNOWN),
+                entry("E", Attendance.UNKNOWN),
+                entry("F", Attendance.UNKNOWN),
+                entry("G", Attendance.UNKNOWN),
+                entry("H", Attendance.UNKNOWN),
+                entry("I", Attendance.UNKNOWN),
+                entry("J", Attendance.UNKNOWN),
+                entry("K", Attendance.UNKNOWN)
+        ));
+
+
+    }
+    @Ignore
+    @Test
+    public void cyclicChangeNoToYes() {
+        processFile("cyclic");
+        input.publish("A", false);
+        input.publish("B", false);
+        verify(output).attendance(map(
+                entry("A", Attendance.UNKNOWN),
+                entry("B", Attendance.UNKNOWN),
+                entry("C", Attendance.UNKNOWN),
+                entry("D", Attendance.UNKNOWN),
+                entry("E", Attendance.UNKNOWN),
+                entry("F", Attendance.UNKNOWN),
+                entry("G", Attendance.UNKNOWN),
+                entry("H", Attendance.UNKNOWN),
+                entry("I", Attendance.UNKNOWN),
+                entry("J", Attendance.UNKNOWN),
+                entry("K", Attendance.UNKNOWN)
+        ));
+
+        input.publish("B", true);
+        verify(output).attendance(map(
+                entry("A", Attendance.UNKNOWN),
+                entry("B", Attendance.UNKNOWN),
+                entry("C", Attendance.UNKNOWN),
+                entry("D", Attendance.UNKNOWN),
+                entry("E", Attendance.UNKNOWN),
+                entry("F", Attendance.UNKNOWN),
+                entry("G", Attendance.UNKNOWN),
+                entry("H", Attendance.UNKNOWN),
+                entry("I", Attendance.UNKNOWN),
+                entry("J", Attendance.UNKNOWN),
+                entry("K", Attendance.UNKNOWN)
+        ));
+
+        input.publish("A", true);
+        verify(output).attendance(map(
+                entry("A", Attendance.UNKNOWN),
+                entry("B", Attendance.UNKNOWN),
+                entry("C", Attendance.UNKNOWN),
+                entry("D", Attendance.UNKNOWN),
+                entry("E", Attendance.UNKNOWN),
+                entry("F", Attendance.UNKNOWN),
+                entry("G", Attendance.UNKNOWN),
+                entry("H", Attendance.UNKNOWN),
+                entry("I", Attendance.UNKNOWN),
+                entry("J", Attendance.UNKNOWN),
+                entry("K", Attendance.UNKNOWN)
+        ));
+    }
+    @Ignore
+    @Test
+    public void cyclicChangeYesToUnknown() {
+        processFile("cyclic");
+        input.publish("A", true);
+        input.publish("B", true);
+        verify(output).attendance(map(
+                entry("A", Attendance.UNKNOWN),
+                entry("B", Attendance.UNKNOWN),
+                entry("C", Attendance.UNKNOWN),
+                entry("D", Attendance.UNKNOWN),
+                entry("E", Attendance.UNKNOWN),
+                entry("F", Attendance.UNKNOWN),
+                entry("G", Attendance.UNKNOWN),
+                entry("H", Attendance.UNKNOWN),
+                entry("I", Attendance.UNKNOWN),
+                entry("J", Attendance.UNKNOWN),
+                entry("K", Attendance.UNKNOWN)
+        ));
+
+        input.publish("B", null);
+        verify(output).attendance(map(
+                entry("A", Attendance.UNKNOWN),
+                entry("B", Attendance.UNKNOWN),
+                entry("C", Attendance.UNKNOWN),
+                entry("D", Attendance.UNKNOWN),
+                entry("E", Attendance.UNKNOWN),
+                entry("F", Attendance.UNKNOWN),
+                entry("G", Attendance.UNKNOWN),
+                entry("H", Attendance.UNKNOWN),
+                entry("I", Attendance.UNKNOWN),
+                entry("J", Attendance.UNKNOWN),
+                entry("K", Attendance.UNKNOWN)
+        ));
+
+        input.publish("A", null);
+        verify(output).attendance(map(
+                entry("A", Attendance.UNKNOWN),
+                entry("B", Attendance.UNKNOWN),
+                entry("C", Attendance.UNKNOWN),
+                entry("D", Attendance.UNKNOWN),
+                entry("E", Attendance.UNKNOWN),
+                entry("F", Attendance.UNKNOWN),
+                entry("G", Attendance.UNKNOWN),
+                entry("H", Attendance.UNKNOWN),
+                entry("I", Attendance.UNKNOWN),
+                entry("J", Attendance.UNKNOWN),
+                entry("K", Attendance.UNKNOWN)
+        ));
+
+
+    }
+    @Ignore
+    @Test
+    public void cyclicChangeNoToUnknown() {
+        processFile("cyclic");
+        input.publish("A", false);
+        input.publish("B", false);
+        verify(output).attendance(map(
+                entry("A", Attendance.UNKNOWN),
+                entry("B", Attendance.UNKNOWN),
+                entry("C", Attendance.UNKNOWN),
+                entry("D", Attendance.UNKNOWN),
+                entry("E", Attendance.UNKNOWN),
+                entry("F", Attendance.UNKNOWN),
+                entry("G", Attendance.UNKNOWN),
+                entry("H", Attendance.UNKNOWN),
+                entry("I", Attendance.UNKNOWN),
+                entry("J", Attendance.UNKNOWN),
+                entry("K", Attendance.UNKNOWN)
+        ));
+
+        input.publish("B", null);
+        verify(output).attendance(map(
+                entry("A", Attendance.UNKNOWN),
+                entry("B", Attendance.UNKNOWN),
+                entry("C", Attendance.UNKNOWN),
+                entry("D", Attendance.UNKNOWN),
+                entry("E", Attendance.UNKNOWN),
+                entry("F", Attendance.UNKNOWN),
+                entry("G", Attendance.UNKNOWN),
+                entry("H", Attendance.UNKNOWN),
+                entry("I", Attendance.UNKNOWN),
+                entry("J", Attendance.UNKNOWN),
+                entry("K", Attendance.UNKNOWN)
+        ));
+
+        input.publish("A", null);
+        verify(output).attendance(map(
+                entry("A", Attendance.UNKNOWN),
+                entry("B", Attendance.UNKNOWN),
+                entry("C", Attendance.UNKNOWN),
+                entry("D", Attendance.UNKNOWN),
+                entry("E", Attendance.UNKNOWN),
+                entry("F", Attendance.UNKNOWN),
+                entry("G", Attendance.UNKNOWN),
+                entry("H", Attendance.UNKNOWN),
+                entry("I", Attendance.UNKNOWN),
+                entry("J", Attendance.UNKNOWN),
+                entry("K", Attendance.UNKNOWN)
+        ));
+    }
 
 
 
