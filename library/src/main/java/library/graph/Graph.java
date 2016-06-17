@@ -215,6 +215,7 @@ public class Graph<T>{
         }
         while (!queue.isEmpty()) {
             T v = queue.remove(0);
+            reachable.add(v);
             if (!traversed.contains(v)) {
                 queue.addAll(getChildren(v));
                 traversed.add(v);

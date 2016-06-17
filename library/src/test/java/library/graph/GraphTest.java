@@ -2,10 +2,7 @@ package library.graph;
 
 import static org.junit.Assert.*;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -17,6 +14,7 @@ import library.graph.exception.NodeDoesntExistsException;
 
 public class GraphTest {
 	private final String unexpeceted = "Unexpeceted exception";
+
 
 	@Test
 	public void canAddNodeOnce(){
@@ -477,5 +475,41 @@ public class GraphTest {
 		set.add(2);
 		Assert.assertEquals(set, map.get(3));
 	}
-	
+
+	@Test
+	public void reachableVerticesComplexGraphCorrect() {
+		Graph<Integer> $ = createComplex();
+		Assert.assertEquals($.getAllReachableFrom(5),	new HashSet<>(Arrays.asList(5,2,9,10,11)));
+		Assert.assertEquals($.getAllReachableFrom(3),	new HashSet<>(Arrays.asList(3,8,9,10)));
+		Assert.assertEquals($.getAllReachableFrom(7),   new HashSet<>(Arrays.asList(7,8,2,9,10,11)));
+		Assert.assertEquals($.getAllReachableFrom(8),	new HashSet<>(Arrays.asList(8,9)));
+		Assert.assertEquals($.getAllReachableFrom(10),	new HashSet<>(Collections.singletonList(10)));
+		Assert.assertEquals($.getAllReachableFrom(11),	new HashSet<>(Arrays.asList(2,9,10,11)));
+		Assert.assertEquals($.getAllReachableFrom(2),	new HashSet<>(Collections.singletonList(2)));
+		Assert.assertEquals($.getAllReachableFrom(9),	new HashSet<>(Collections.singletonList(9)));
+
+	}
+
+	private Graph<Integer> createComplex() {
+		Graph<Integer> g = new Graph<>();
+		g.addNode(5);
+		g.addNode(7);
+		g.addNode(3);
+		g.addNode(11);
+		g.addNode(8);
+		g.addNode(2);
+		g.addNode(9);
+		g.addNode(10);
+		g.addEdge(5, 11);
+		g.addEdge(11, 2);
+		g.addEdge(11, 9);
+		g.addEdge(11, 10);
+		g.addEdge(7, 11);
+		g.addEdge(7, 8);
+		g.addEdge(8, 9);
+		g.addEdge(3, 8);
+		g.addEdge(3, 10);
+		return g;
+	}
+
 }

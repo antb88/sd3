@@ -83,10 +83,6 @@ public class SimplePartyApp implements PartyApp{
         return this;
     }
 
-    private boolean didntDeclareAttendance(String name) {
-        return !alreadyDeclaredAttendance(name);
-    }
-
     private boolean alreadyDeclaredAttendance(String name) {
         return attendance.get(name) == Attendance.ATTENDING || attendance.get(name) == Attendance.NOT_ATTENDING;
     }
@@ -103,7 +99,6 @@ public class SimplePartyApp implements PartyApp{
         return this;
     }
 
-
     private SimplePartyApp computeAll() {
         attendance.replaceAll(this::defaultAttendance);
         graph.topologicSort(this::calculateAttendance);
@@ -114,21 +109,21 @@ public class SimplePartyApp implements PartyApp{
         attendance.compute(invitee, this::computeByDependencies);
         if (attendance.get(invitee) == Attendance.NOT_ATTENDING) {
             graph.getAllReachableFrom(invitee).stream()
-                    .filter(this::didntDeclareAttendance)
+                    .filter(x -> !alreadyDeclaredAttendance(x))
                     .forEach(x -> attendance.put(x, Attendance.PROBABLY_NOT_ATTENDING));
         }
     }
 
     private Attendance computeByDependencies(String invitee, Attendance attendance) {
-        if (attendance == Attendance.ATTENDING || attendance == Attendance.NOT_ATTENDING)
+        if (alreadyDeclaredAttendance(invitee))
             return attendance;
 
         Set<String> dependencies = configuration.getDependenciesOf(invitee);
 
-        if (!dependencies.isEmpty() && dependencies.stream().allMatch(this::attendingOrPropablyAttending))
+        if (!dependencies.isEmpty() && dependencies.stream().allMatch(this::attendingOrProbablyAttending))
             return Attendance.PROBABLY_ATTENDING;
 
-        else if (dependencies.stream().anyMatch(this::notAttendingOrPropablyNotAttending))
+        else if (dependencies.stream().anyMatch(this::notAttendingOrProbablyNotAttending))
             return Attendance.PROBABLY_NOT_ATTENDING;
 
         else
@@ -136,16 +131,16 @@ public class SimplePartyApp implements PartyApp{
 
     }
 
-    private boolean notAttendingOrPropablyNotAttending(String s) {
+    private boolean notAttendingOrProbablyNotAttending(String s) {
         return attendance.get(s) == Attendance.NOT_ATTENDING || attendance.get(s) == Attendance.PROBABLY_NOT_ATTENDING;
     }
 
-    private boolean attendingOrPropablyAttending(String s) {
+    private boolean attendingOrProbablyAttending(String s) {
         return attendance.get(s) == Attendance.ATTENDING || attendance.get(s) == Attendance.PROBABLY_ATTENDING;
     }
 
-    private Attendance defaultAttendance(String s, Attendance attendance) {
-        return attendance == Attendance.ATTENDING || attendance == Attendance.NOT_ATTENDING ? attendance : Attendance.UNKNOWN;
+    private Attendance defaultAttendance(String invitee, Attendance attendance) {
+        return alreadyDeclaredAttendance(invitee) ? attendance : Attendance.UNKNOWN;
     }
 
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
