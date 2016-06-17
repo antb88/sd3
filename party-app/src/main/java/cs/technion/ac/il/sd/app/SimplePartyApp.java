@@ -83,6 +83,10 @@ public class SimplePartyApp implements PartyApp{
         return this;
     }
 
+    private boolean didntDeclareAttendance(String name) {
+        return !alreadyDeclaredAttendance(name);
+    }
+
     private boolean alreadyDeclaredAttendance(String name) {
         return attendance.get(name) == Attendance.ATTENDING || attendance.get(name) == Attendance.NOT_ATTENDING;
     }
@@ -109,30 +113,27 @@ public class SimplePartyApp implements PartyApp{
     private void calculateAttendance(String invitee) {
         attendance.compute(invitee, this::computeByDependencies);
         if (attendance.get(invitee) == Attendance.NOT_ATTENDING) {
-            graph.getAllReachableFrom(invitee)
-                    .forEach(x -> {
-                        if (!alreadyDeclaredAttendance(x))
-                            attendance.put(x, Attendance.PROBABLY_NOT_ATTENDING);
-                    });
+            graph.getAllReachableFrom(invitee).stream()
+                    .filter(this::didntDeclareAttendance)
+                    .forEach(x -> attendance.put(x, Attendance.PROBABLY_NOT_ATTENDING));
         }
     }
 
     private Attendance computeByDependencies(String invitee, Attendance attendance) {
-        if (attendance == Attendance.ATTENDING || attendance == Attendance.NOT_ATTENDING) {
+        if (attendance == Attendance.ATTENDING || attendance == Attendance.NOT_ATTENDING)
             return attendance;
-        }
 
         Set<String> dependencies = configuration.getDependenciesOf(invitee);
 
-        if (!dependencies.isEmpty() && dependencies.stream().allMatch(this::attendingOrPropablyAttending)) {
+        if (!dependencies.isEmpty() && dependencies.stream().allMatch(this::attendingOrPropablyAttending))
             return Attendance.PROBABLY_ATTENDING;
-        }
-        else if (dependencies.stream().anyMatch(this::notAttendingOrPropablyNotAttending)) {
+
+        else if (dependencies.stream().anyMatch(this::notAttendingOrPropablyNotAttending))
             return Attendance.PROBABLY_NOT_ATTENDING;
-        }
-        else {
+
+        else
             return Attendance.UNKNOWN;
-        }
+
     }
 
     private boolean notAttendingOrPropablyNotAttending(String s) {
