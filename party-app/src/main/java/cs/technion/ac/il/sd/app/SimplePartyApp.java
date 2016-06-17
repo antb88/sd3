@@ -1,5 +1,6 @@
 package cs.technion.ac.il.sd.app;
 
+import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import cs.technion.ac.il.sd.Attendance;
 import cs.technion.ac.il.sd.Input;
@@ -94,7 +95,7 @@ public class SimplePartyApp implements PartyApp{
     }
 
     private SimplePartyApp outputResult() {
-        output.attendance(attendance);
+        output.attendance(Maps.newHashMap(attendance));
         return this;
     }
 
