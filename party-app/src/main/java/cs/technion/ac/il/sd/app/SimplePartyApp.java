@@ -70,13 +70,13 @@ public class SimplePartyApp implements PartyApp{
     }
 
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-    private SimplePartyApp updateAttendance(String name, Optional<Boolean> attendance_) {
-        if (attendance_.isPresent()) {
-            graph.removeIncomingEdgesOf(name);
-        } else if (alreadyDeclaredAttendance(name)) {
-            graph.addEdgesTo(name, configuration.getDependenciesOf(name));
+    private SimplePartyApp updateAttendance(String invitee, Optional<Boolean> newAttendance) {
+        if (newAttendance.isPresent()) {
+            graph.removeIncomingEdgesOf(invitee);
+        } else if (alreadyDeclaredAttendance(invitee)) {
+            graph.addEdgesTo(invitee, configuration.getDependenciesOf(invitee));
         }
-        attendance.put(name, toAttendance(attendance_));
+        this.attendance.put(invitee, toAttendance(newAttendance));
         return this;
     }
 

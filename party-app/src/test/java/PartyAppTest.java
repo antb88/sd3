@@ -14,11 +14,11 @@ import org.mockito.Mockito;
 import java.io.File;
 import java.util.*;
 import java.util.function.BiConsumer;
-import java.util.stream.Collectors;
 
 import static org.mockito.Mockito.verify;
 
 /**
+ * Tests for {@link cs.technion.ac.il.sd.app.SimplePartyApp}
  * Created by Nati on 6/17/2016.
  */
 @SuppressWarnings("unchecked")
@@ -871,4 +871,91 @@ public class PartyAppTest {
         }
         verify(output).attendance(mapFromList(entries));
     }
+
+    @Test
+    public void withCircleCorrectInitialState() {
+        processFile("withcircle");
+        input.publish("A", null);
+        verify(output).attendance(map(
+                entry("A", Attendance.UNKNOWN),
+                entry("B", Attendance.UNKNOWN),
+                entry("C", Attendance.UNKNOWN),
+                entry("D", Attendance.UNKNOWN)
+        ));
+    }
+
+    @Test
+    public void withCircleCorrectAfterInCircleAttending() {
+        processFile("withcircle");
+        input.publish("C", true);
+        verify(output).attendance(map(
+                entry("A", Attendance.UNKNOWN),
+                entry("B", Attendance.PROBABLY_ATTENDING),
+                entry("C", Attendance.ATTENDING),
+                entry("D", Attendance.UNKNOWN)
+        ));
+    }
+
+    @Test
+    public void withCircleCorrectAfterInCircleNotAttending() {
+        processFile("withcircle");
+        input.publish("C", false);
+        verify(output).attendance(map(
+                entry("A", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("B", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("C", Attendance.NOT_ATTENDING),
+                entry("D", Attendance.UNKNOWN)
+        ));
+    }
+
+    @Test
+    public void circleRevertsToUnknownAfterRestoringDecision() {
+        processFile("withcircle");
+        input.publish("A", true);
+        verify(output).attendance(map(
+                entry("A", Attendance.ATTENDING),
+                entry("B", Attendance.PROBABLY_ATTENDING),
+                entry("C", Attendance.PROBABLY_ATTENDING),
+                entry("D", Attendance.UNKNOWN)
+        ));
+        input.publish("A", null);
+        verify(output).attendance(map(
+                entry("A", Attendance.UNKNOWN),
+                entry("B", Attendance.UNKNOWN),
+                entry("C", Attendance.UNKNOWN),
+                entry("D", Attendance.UNKNOWN)
+        ));
+    }
+
+    @Test
+    public void circlePropagatesNotAttending() {
+        processFile("withcircle");
+        input.publish("D", false);
+        verify(output).attendance(map(
+                entry("A", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("B", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("C", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("D", Attendance.NOT_ATTENDING)
+        ));
+        input.publish("D", null);
+        verify(output).attendance(map(
+                entry("A", Attendance.UNKNOWN),
+                entry("B", Attendance.UNKNOWN),
+                entry("C", Attendance.UNKNOWN),
+                entry("D", Attendance.UNKNOWN)
+        ));
+    }
+
+    @Test
+    public void circleDoesntPropagateAttending() {
+        processFile("withcircle");
+        input.publish("D", true);
+        verify(output).attendance(map(
+                entry("A", Attendance.UNKNOWN),
+                entry("B", Attendance.UNKNOWN),
+                entry("C", Attendance.UNKNOWN),
+                entry("D", Attendance.ATTENDING)
+        ));
+    }
+
 }
