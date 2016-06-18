@@ -447,47 +447,67 @@ public class PartyAppTest {
                 entry("K", Attendance.ATTENDING)
         ));
     }
-    @Ignore
+
     @Test
     public void cyclicProbablyYes() {
         processFile("cyclic");
         input.publish("A", false);
-        input.publish("B", true);
-        input.publish("C", true);
-        input.publish("D", true);
+        input.publish("E", true);
+        input.publish("K", true);
         verify(output).attendance(map(
-                entry("A", Attendance.UNKNOWN),
-                entry("B", Attendance.UNKNOWN),
-                entry("C", Attendance.UNKNOWN),
-                entry("D", Attendance.UNKNOWN),
-                entry("E", Attendance.UNKNOWN),
-                entry("F", Attendance.UNKNOWN),
-                entry("G", Attendance.UNKNOWN),
+                entry("A", Attendance.NOT_ATTENDING),
+                entry("B", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("C", Attendance.PROBABLY_ATTENDING),
+                entry("D", Attendance.PROBABLY_ATTENDING),
+                entry("E", Attendance.ATTENDING),
+                entry("F", Attendance.PROBABLY_ATTENDING),
+                entry("G", Attendance.PROBABLY_ATTENDING),
                 entry("H", Attendance.UNKNOWN),
                 entry("I", Attendance.UNKNOWN),
                 entry("J", Attendance.UNKNOWN),
-                entry("K", Attendance.UNKNOWN)
+                entry("K", Attendance.ATTENDING)
         ));
     }
-    @Ignore
+
     @Test
     public void cyclicProbablyNo() {
         processFile("cyclic");
         input.publish("A", false);
-        input.publish("B", true);
-        input.publish("C", false);
+        input.publish("K", true);
+        input.publish("J", false);
         verify(output).attendance(map(
-                entry("A", Attendance.UNKNOWN),
+                entry("A", Attendance.NOT_ATTENDING),
+                entry("B", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("C", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("D", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("E", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("F", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("G", Attendance.PROBABLY_ATTENDING),
+                entry("H", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("I", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("J", Attendance.NOT_ATTENDING),
+                entry("K", Attendance.ATTENDING)
+        ));
+    }
+
+    @Test
+    public void cyclicRemainUnknown() {
+        processFile("cyclic");
+        input.publish("A", true);
+        input.publish("K", false);
+        input.publish("H", false);
+        verify(output).attendance(map(
+                entry("A", Attendance.ATTENDING),
                 entry("B", Attendance.UNKNOWN),
                 entry("C", Attendance.UNKNOWN),
                 entry("D", Attendance.UNKNOWN),
                 entry("E", Attendance.UNKNOWN),
-                entry("F", Attendance.UNKNOWN),
-                entry("G", Attendance.UNKNOWN),
-                entry("H", Attendance.UNKNOWN),
-                entry("I", Attendance.UNKNOWN),
-                entry("J", Attendance.UNKNOWN),
-                entry("K", Attendance.UNKNOWN)
+                entry("F", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("G", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("H", Attendance.NOT_ATTENDING),
+                entry("I", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("J", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("K", Attendance.NOT_ATTENDING)
         ));
     }
     @Ignore
