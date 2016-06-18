@@ -1,9 +1,9 @@
-B, A, C
-D, E
-C, D
-E, B
-F, D, G, K
-I, H
-H, J
-J, I
-G, K
+Daenerys Targaryen, Tyrion Lannister, Cersei Lannister
+Jaime Lannister, Tommen Baratheon
+Cersei Lannister, Jaime Lannister
+Tommen Baratheon, Daenerys Targaryen
+Khal Drogo, Jaime Lannister, Ramsay Bolton, Varys
+Missandei, Catelyn Stark
+Catelyn Stark, Stannis Baratheon
+Stannis Baratheon, Missandei
+Ramsay Bolton, Varys

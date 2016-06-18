@@ -6,7 +6,6 @@ import cs.technion.ac.il.sd.Input;
 import cs.technion.ac.il.sd.Output;
 import cs.technion.ac.il.sd.app.PartyApp;
 import cs.technion.ac.il.sd.app.PartyModule;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
@@ -15,6 +14,7 @@ import org.mockito.Mockito;
 import java.io.File;
 import java.util.*;
 import java.util.function.BiConsumer;
+import java.util.stream.Collectors;
 
 import static org.mockito.Mockito.verify;
 
@@ -53,6 +53,13 @@ public class PartyAppTest {
         return map;
     }
 
+    private Map<String, Attendance> mapFromList(List<Map.Entry<String, Attendance>> entryList) {
+        Map<String, Attendance> map = new HashMap<>();
+        for (Map.Entry<String, Attendance> e : entryList)
+            map.put(e.getKey(), e.getValue());
+        return map;
+    }
+
     private final PartyApp $ = injector.getInstance(PartyApp.class);
 
     private void processFile(String name) {
@@ -65,7 +72,6 @@ public class PartyAppTest {
     private static Map.Entry<String, Attendance> entry(String name, Attendance a) {
         return new AbstractMap.SimpleEntry<>(name, a);
     }
-
     @Test
     public void simpleInitAllToUnknown() {
         processFile("simple");
@@ -80,6 +86,7 @@ public class PartyAppTest {
                 entry("Hodor", Attendance.UNKNOWN)
         ));
     }
+
     @Test
     public void simpleDependencyUnknown() {
         processFile("simple");
@@ -343,379 +350,525 @@ public class PartyAppTest {
     @Test
     public void cyclicInitAllToUnknown() {
         processFile("cyclic");
-        input.publish("A", null);
+        input.publish("Tyrion Lannister", null);
         verify(output).attendance(map(
-                entry("A", Attendance.UNKNOWN),
-                entry("B", Attendance.UNKNOWN),
-                entry("C", Attendance.UNKNOWN),
-                entry("D", Attendance.UNKNOWN),
-                entry("E", Attendance.UNKNOWN),
-                entry("F", Attendance.UNKNOWN),
-                entry("G", Attendance.UNKNOWN),
-                entry("H", Attendance.UNKNOWN),
-                entry("I", Attendance.UNKNOWN),
-                entry("J", Attendance.UNKNOWN),
-                entry("K", Attendance.UNKNOWN)
+                entry("Tyrion Lannister", Attendance.UNKNOWN),
+                entry("Daenerys Targaryen", Attendance.UNKNOWN),
+                entry("Cersei Lannister", Attendance.UNKNOWN),
+                entry("Jaime Lannister", Attendance.UNKNOWN),
+                entry("Tommen Baratheon", Attendance.UNKNOWN),
+                entry("Khal Drogo", Attendance.UNKNOWN),
+                entry("Ramsay Bolton", Attendance.UNKNOWN),
+                entry("Catelyn Stark", Attendance.UNKNOWN),
+                entry("Missandei", Attendance.UNKNOWN),
+                entry("Stannis Baratheon", Attendance.UNKNOWN),
+                entry("Varys", Attendance.UNKNOWN)
         ));
     }
 
     @Test
     public void cyclicDependencyProbablyYes() {
         processFile("cyclic");
-        input.publish("I", true);
-        input.publish("B", true);
+        input.publish("Missandei", true);
+        input.publish("Daenerys Targaryen", true);
         verify(output).attendance(map(
-                entry("A", Attendance.UNKNOWN),
-                entry("B", Attendance.ATTENDING),
-                entry("C", Attendance.PROBABLY_ATTENDING),
-                entry("D", Attendance.PROBABLY_ATTENDING),
-                entry("E", Attendance.PROBABLY_ATTENDING),
-                entry("F", Attendance.UNKNOWN),
-                entry("G", Attendance.UNKNOWN),
-                entry("H", Attendance.PROBABLY_ATTENDING),
-                entry("I", Attendance.ATTENDING),
-                entry("J", Attendance.PROBABLY_ATTENDING),
-                entry("K", Attendance.UNKNOWN)
+                entry("Tyrion Lannister", Attendance.UNKNOWN),
+                entry("Daenerys Targaryen", Attendance.ATTENDING),
+                entry("Cersei Lannister", Attendance.PROBABLY_ATTENDING),
+                entry("Jaime Lannister", Attendance.PROBABLY_ATTENDING),
+                entry("Tommen Baratheon", Attendance.PROBABLY_ATTENDING),
+                entry("Khal Drogo", Attendance.UNKNOWN),
+                entry("Ramsay Bolton", Attendance.UNKNOWN),
+                entry("Catelyn Stark", Attendance.PROBABLY_ATTENDING),
+                entry("Missandei", Attendance.ATTENDING),
+                entry("Stannis Baratheon", Attendance.PROBABLY_ATTENDING),
+                entry("Varys", Attendance.UNKNOWN)
         ));
     }
 
     @Test
     public void cyclicDependencyProbablyNo() {
         processFile("cyclic");
-        input.publish("I", false);
-        input.publish("B", false);
+        input.publish("Missandei", false);
+        input.publish("Daenerys Targaryen", false);
         verify(output).attendance(map(
-                entry("A", Attendance.UNKNOWN),
-                entry("B", Attendance.NOT_ATTENDING),
-                entry("C", Attendance.PROBABLY_NOT_ATTENDING),
-                entry("D", Attendance.PROBABLY_NOT_ATTENDING),
-                entry("E", Attendance.PROBABLY_NOT_ATTENDING),
-                entry("F", Attendance.PROBABLY_NOT_ATTENDING),
-                entry("G", Attendance.UNKNOWN),
-                entry("H", Attendance.PROBABLY_NOT_ATTENDING),
-                entry("I", Attendance.NOT_ATTENDING),
-                entry("J", Attendance.PROBABLY_NOT_ATTENDING),
-                entry("K", Attendance.UNKNOWN)
+                entry("Tyrion Lannister", Attendance.UNKNOWN),
+                entry("Daenerys Targaryen", Attendance.NOT_ATTENDING),
+                entry("Cersei Lannister", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("Jaime Lannister", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("Tommen Baratheon", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("Khal Drogo", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("Ramsay Bolton", Attendance.UNKNOWN),
+                entry("Catelyn Stark", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("Missandei", Attendance.NOT_ATTENDING),
+                entry("Stannis Baratheon", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("Varys", Attendance.UNKNOWN)
         ));
     }
 
     @Test
     public void cyclicDependencyUnknown() {
         processFile("cyclic");
-        input.publish("A", true);
-        input.publish("G", true);
+        input.publish("Tyrion Lannister", true);
+        input.publish("Ramsay Bolton", true);
         verify(output).attendance(map(
-                entry("A", Attendance.ATTENDING),
-                entry("B", Attendance.UNKNOWN),
-                entry("C", Attendance.UNKNOWN),
-                entry("D", Attendance.UNKNOWN),
-                entry("E", Attendance.UNKNOWN),
-                entry("F", Attendance.UNKNOWN),
-                entry("G", Attendance.ATTENDING),
-                entry("H", Attendance.UNKNOWN),
-                entry("I", Attendance.UNKNOWN),
-                entry("J", Attendance.UNKNOWN),
-                entry("K", Attendance.UNKNOWN)
+                entry("Tyrion Lannister", Attendance.ATTENDING),
+                entry("Daenerys Targaryen", Attendance.UNKNOWN),
+                entry("Cersei Lannister", Attendance.UNKNOWN),
+                entry("Jaime Lannister", Attendance.UNKNOWN),
+                entry("Tommen Baratheon", Attendance.UNKNOWN),
+                entry("Khal Drogo", Attendance.UNKNOWN),
+                entry("Ramsay Bolton", Attendance.ATTENDING),
+                entry("Catelyn Stark", Attendance.UNKNOWN),
+                entry("Missandei", Attendance.UNKNOWN),
+                entry("Stannis Baratheon", Attendance.UNKNOWN),
+                entry("Varys", Attendance.UNKNOWN)
         ));
     }
 
     @Test
     public void cyclicAllDefinite() {
         processFile("cyclic");
-        input.publish("A", true);
-        input.publish("B", false);
-        input.publish("C", true);
-        input.publish("D", false);
-        input.publish("E", true);
-        input.publish("F", false);
-        input.publish("G", false);
-        input.publish("H", true);
-        input.publish("I", false);
-        input.publish("J", true);
-        input.publish("K", true);
+        input.publish("Tyrion Lannister", true);
+        input.publish("Daenerys Targaryen", false);
+        input.publish("Cersei Lannister", true);
+        input.publish("Jaime Lannister", false);
+        input.publish("Tommen Baratheon", true);
+        input.publish("Khal Drogo", false);
+        input.publish("Ramsay Bolton", false);
+        input.publish("Catelyn Stark", true);
+        input.publish("Missandei", false);
+        input.publish("Stannis Baratheon", true);
+        input.publish("Varys", true);
         verify(output).attendance(map(
-                entry("A", Attendance.ATTENDING),
-                entry("B", Attendance.NOT_ATTENDING),
-                entry("C", Attendance.ATTENDING),
-                entry("D", Attendance.NOT_ATTENDING),
-                entry("E", Attendance.ATTENDING),
-                entry("F", Attendance.NOT_ATTENDING),
-                entry("G", Attendance.NOT_ATTENDING),
-                entry("H", Attendance.ATTENDING),
-                entry("I", Attendance.NOT_ATTENDING),
-                entry("J", Attendance.ATTENDING),
-                entry("K", Attendance.ATTENDING)
+                entry("Tyrion Lannister", Attendance.ATTENDING),
+                entry("Daenerys Targaryen", Attendance.NOT_ATTENDING),
+                entry("Cersei Lannister", Attendance.ATTENDING),
+                entry("Jaime Lannister", Attendance.NOT_ATTENDING),
+                entry("Tommen Baratheon", Attendance.ATTENDING),
+                entry("Khal Drogo", Attendance.NOT_ATTENDING),
+                entry("Ramsay Bolton", Attendance.NOT_ATTENDING),
+                entry("Catelyn Stark", Attendance.ATTENDING),
+                entry("Missandei", Attendance.NOT_ATTENDING),
+                entry("Stannis Baratheon", Attendance.ATTENDING),
+                entry("Varys", Attendance.ATTENDING)
         ));
     }
 
     @Test
     public void cyclicProbablyYes() {
         processFile("cyclic");
-        input.publish("A", false);
-        input.publish("E", true);
-        input.publish("K", true);
+        input.publish("Tyrion Lannister", false);
+        input.publish("Tommen Baratheon", true);
+        input.publish("Varys", true);
         verify(output).attendance(map(
-                entry("A", Attendance.NOT_ATTENDING),
-                entry("B", Attendance.PROBABLY_NOT_ATTENDING),
-                entry("C", Attendance.PROBABLY_ATTENDING),
-                entry("D", Attendance.PROBABLY_ATTENDING),
-                entry("E", Attendance.ATTENDING),
-                entry("F", Attendance.PROBABLY_ATTENDING),
-                entry("G", Attendance.PROBABLY_ATTENDING),
-                entry("H", Attendance.UNKNOWN),
-                entry("I", Attendance.UNKNOWN),
-                entry("J", Attendance.UNKNOWN),
-                entry("K", Attendance.ATTENDING)
+                entry("Tyrion Lannister", Attendance.NOT_ATTENDING),
+                entry("Daenerys Targaryen", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("Cersei Lannister", Attendance.PROBABLY_ATTENDING),
+                entry("Jaime Lannister", Attendance.PROBABLY_ATTENDING),
+                entry("Tommen Baratheon", Attendance.ATTENDING),
+                entry("Khal Drogo", Attendance.PROBABLY_ATTENDING),
+                entry("Ramsay Bolton", Attendance.PROBABLY_ATTENDING),
+                entry("Catelyn Stark", Attendance.UNKNOWN),
+                entry("Missandei", Attendance.UNKNOWN),
+                entry("Stannis Baratheon", Attendance.UNKNOWN),
+                entry("Varys", Attendance.ATTENDING)
         ));
     }
 
     @Test
     public void cyclicProbablyNo() {
         processFile("cyclic");
-        input.publish("A", false);
-        input.publish("K", true);
-        input.publish("J", false);
+        input.publish("Tyrion Lannister", false);
+        input.publish("Varys", true);
+        input.publish("Stannis Baratheon", false);
         verify(output).attendance(map(
-                entry("A", Attendance.NOT_ATTENDING),
-                entry("B", Attendance.PROBABLY_NOT_ATTENDING),
-                entry("C", Attendance.PROBABLY_NOT_ATTENDING),
-                entry("D", Attendance.PROBABLY_NOT_ATTENDING),
-                entry("E", Attendance.PROBABLY_NOT_ATTENDING),
-                entry("F", Attendance.PROBABLY_NOT_ATTENDING),
-                entry("G", Attendance.PROBABLY_ATTENDING),
-                entry("H", Attendance.PROBABLY_NOT_ATTENDING),
-                entry("I", Attendance.PROBABLY_NOT_ATTENDING),
-                entry("J", Attendance.NOT_ATTENDING),
-                entry("K", Attendance.ATTENDING)
+                entry("Tyrion Lannister", Attendance.NOT_ATTENDING),
+                entry("Daenerys Targaryen", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("Cersei Lannister", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("Jaime Lannister", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("Tommen Baratheon", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("Khal Drogo", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("Ramsay Bolton", Attendance.PROBABLY_ATTENDING),
+                entry("Catelyn Stark", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("Missandei", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("Stannis Baratheon", Attendance.NOT_ATTENDING),
+                entry("Varys", Attendance.ATTENDING)
         ));
     }
 
     @Test
     public void cyclicRemainUnknown() {
         processFile("cyclic");
-        input.publish("A", true);
-        input.publish("K", false);
-        input.publish("H", false);
+        input.publish("Tyrion Lannister", true);
+        input.publish("Varys", false);
+        input.publish("Catelyn Stark", false);
         verify(output).attendance(map(
-                entry("A", Attendance.ATTENDING),
-                entry("B", Attendance.UNKNOWN),
-                entry("C", Attendance.UNKNOWN),
-                entry("D", Attendance.UNKNOWN),
-                entry("E", Attendance.UNKNOWN),
-                entry("F", Attendance.PROBABLY_NOT_ATTENDING),
-                entry("G", Attendance.PROBABLY_NOT_ATTENDING),
-                entry("H", Attendance.NOT_ATTENDING),
-                entry("I", Attendance.PROBABLY_NOT_ATTENDING),
-                entry("J", Attendance.PROBABLY_NOT_ATTENDING),
-                entry("K", Attendance.NOT_ATTENDING)
+                entry("Tyrion Lannister", Attendance.ATTENDING),
+                entry("Daenerys Targaryen", Attendance.UNKNOWN),
+                entry("Cersei Lannister", Attendance.UNKNOWN),
+                entry("Jaime Lannister", Attendance.UNKNOWN),
+                entry("Tommen Baratheon", Attendance.UNKNOWN),
+                entry("Khal Drogo", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("Ramsay Bolton", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("Catelyn Stark", Attendance.NOT_ATTENDING),
+                entry("Missandei", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("Stannis Baratheon", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("Varys", Attendance.NOT_ATTENDING)
         ));
     }
-    @Ignore
+
     @Test
     public void cyclicChangeYesToNo() {
         processFile("cyclic");
-        input.publish("A", true);
-        input.publish("B", true);
+        input.publish("Daenerys Targaryen", true);
+        input.publish("Missandei", true);
         verify(output).attendance(map(
-                entry("A", Attendance.UNKNOWN),
-                entry("B", Attendance.UNKNOWN),
-                entry("C", Attendance.UNKNOWN),
-                entry("D", Attendance.UNKNOWN),
-                entry("E", Attendance.UNKNOWN),
-                entry("F", Attendance.UNKNOWN),
-                entry("G", Attendance.UNKNOWN),
-                entry("H", Attendance.UNKNOWN),
-                entry("I", Attendance.UNKNOWN),
-                entry("J", Attendance.UNKNOWN),
-                entry("K", Attendance.UNKNOWN)
+                entry("Tyrion Lannister", Attendance.UNKNOWN),
+                entry("Daenerys Targaryen", Attendance.ATTENDING),
+                entry("Cersei Lannister", Attendance.PROBABLY_ATTENDING),
+                entry("Jaime Lannister", Attendance.PROBABLY_ATTENDING),
+                entry("Tommen Baratheon", Attendance.PROBABLY_ATTENDING),
+                entry("Khal Drogo", Attendance.UNKNOWN),
+                entry("Ramsay Bolton", Attendance.UNKNOWN),
+                entry("Catelyn Stark", Attendance.PROBABLY_ATTENDING),
+                entry("Missandei", Attendance.ATTENDING),
+                entry("Stannis Baratheon", Attendance.PROBABLY_ATTENDING),
+                entry("Varys", Attendance.UNKNOWN)
         ));
 
-        input.publish("B", false);
+        input.publish("Daenerys Targaryen", false);
         verify(output).attendance(map(
-                entry("A", Attendance.UNKNOWN),
-                entry("B", Attendance.UNKNOWN),
-                entry("C", Attendance.UNKNOWN),
-                entry("D", Attendance.UNKNOWN),
-                entry("E", Attendance.UNKNOWN),
-                entry("F", Attendance.UNKNOWN),
-                entry("G", Attendance.UNKNOWN),
-                entry("H", Attendance.UNKNOWN),
-                entry("I", Attendance.UNKNOWN),
-                entry("J", Attendance.UNKNOWN),
-                entry("K", Attendance.UNKNOWN)
+                entry("Tyrion Lannister", Attendance.UNKNOWN),
+                entry("Daenerys Targaryen", Attendance.NOT_ATTENDING),
+                entry("Cersei Lannister", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("Jaime Lannister", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("Tommen Baratheon", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("Khal Drogo", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("Ramsay Bolton", Attendance.UNKNOWN),
+                entry("Catelyn Stark", Attendance.PROBABLY_ATTENDING),
+                entry("Missandei", Attendance.ATTENDING),
+                entry("Stannis Baratheon", Attendance.PROBABLY_ATTENDING),
+                entry("Varys", Attendance.UNKNOWN)
         ));
 
-        input.publish("A", false);
+        input.publish("Missandei", false);
         verify(output).attendance(map(
-                entry("A", Attendance.UNKNOWN),
-                entry("B", Attendance.UNKNOWN),
-                entry("C", Attendance.UNKNOWN),
-                entry("D", Attendance.UNKNOWN),
-                entry("E", Attendance.UNKNOWN),
-                entry("F", Attendance.UNKNOWN),
-                entry("G", Attendance.UNKNOWN),
-                entry("H", Attendance.UNKNOWN),
-                entry("I", Attendance.UNKNOWN),
-                entry("J", Attendance.UNKNOWN),
-                entry("K", Attendance.UNKNOWN)
+                entry("Tyrion Lannister", Attendance.UNKNOWN),
+                entry("Daenerys Targaryen", Attendance.NOT_ATTENDING),
+                entry("Cersei Lannister", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("Jaime Lannister", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("Tommen Baratheon", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("Khal Drogo", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("Ramsay Bolton", Attendance.UNKNOWN),
+                entry("Catelyn Stark", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("Missandei", Attendance.NOT_ATTENDING),
+                entry("Stannis Baratheon", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("Varys", Attendance.UNKNOWN)
         ));
 
 
     }
-    @Ignore
+
     @Test
     public void cyclicChangeNoToYes() {
         processFile("cyclic");
-        input.publish("A", false);
-        input.publish("B", false);
+        input.publish("Tyrion Lannister", false);
+        input.publish("Varys", true);
+        input.publish("Stannis Baratheon", false);
         verify(output).attendance(map(
-                entry("A", Attendance.UNKNOWN),
-                entry("B", Attendance.UNKNOWN),
-                entry("C", Attendance.UNKNOWN),
-                entry("D", Attendance.UNKNOWN),
-                entry("E", Attendance.UNKNOWN),
-                entry("F", Attendance.UNKNOWN),
-                entry("G", Attendance.UNKNOWN),
-                entry("H", Attendance.UNKNOWN),
-                entry("I", Attendance.UNKNOWN),
-                entry("J", Attendance.UNKNOWN),
-                entry("K", Attendance.UNKNOWN)
+                entry("Tyrion Lannister", Attendance.NOT_ATTENDING),
+                entry("Daenerys Targaryen", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("Cersei Lannister", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("Jaime Lannister", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("Tommen Baratheon", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("Khal Drogo", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("Ramsay Bolton", Attendance.PROBABLY_ATTENDING),
+                entry("Catelyn Stark", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("Missandei", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("Stannis Baratheon", Attendance.NOT_ATTENDING),
+                entry("Varys", Attendance.ATTENDING)
         ));
 
-        input.publish("B", true);
+        input.publish("Stannis Baratheon", true);
         verify(output).attendance(map(
-                entry("A", Attendance.UNKNOWN),
-                entry("B", Attendance.UNKNOWN),
-                entry("C", Attendance.UNKNOWN),
-                entry("D", Attendance.UNKNOWN),
-                entry("E", Attendance.UNKNOWN),
-                entry("F", Attendance.UNKNOWN),
-                entry("G", Attendance.UNKNOWN),
-                entry("H", Attendance.UNKNOWN),
-                entry("I", Attendance.UNKNOWN),
-                entry("J", Attendance.UNKNOWN),
-                entry("K", Attendance.UNKNOWN)
+                entry("Tyrion Lannister", Attendance.NOT_ATTENDING),
+                entry("Daenerys Targaryen", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("Cersei Lannister", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("Jaime Lannister", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("Tommen Baratheon", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("Khal Drogo", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("Ramsay Bolton", Attendance.PROBABLY_ATTENDING),
+                entry("Catelyn Stark", Attendance.PROBABLY_ATTENDING),
+                entry("Missandei", Attendance.PROBABLY_ATTENDING),
+                entry("Stannis Baratheon", Attendance.ATTENDING),
+                entry("Varys", Attendance.ATTENDING)
         ));
 
-        input.publish("A", true);
+        input.publish("Tyrion Lannister", true);
         verify(output).attendance(map(
-                entry("A", Attendance.UNKNOWN),
-                entry("B", Attendance.UNKNOWN),
-                entry("C", Attendance.UNKNOWN),
-                entry("D", Attendance.UNKNOWN),
-                entry("E", Attendance.UNKNOWN),
-                entry("F", Attendance.UNKNOWN),
-                entry("G", Attendance.UNKNOWN),
-                entry("H", Attendance.UNKNOWN),
-                entry("I", Attendance.UNKNOWN),
-                entry("J", Attendance.UNKNOWN),
-                entry("K", Attendance.UNKNOWN)
+                entry("Tyrion Lannister", Attendance.ATTENDING),
+                entry("Daenerys Targaryen", Attendance.UNKNOWN),
+                entry("Cersei Lannister", Attendance.UNKNOWN),
+                entry("Jaime Lannister", Attendance.UNKNOWN),
+                entry("Tommen Baratheon", Attendance.UNKNOWN),
+                entry("Khal Drogo", Attendance.UNKNOWN),
+                entry("Ramsay Bolton", Attendance.PROBABLY_ATTENDING),
+                entry("Catelyn Stark", Attendance.PROBABLY_ATTENDING),
+                entry("Missandei", Attendance.PROBABLY_ATTENDING),
+                entry("Stannis Baratheon", Attendance.ATTENDING),
+                entry("Varys", Attendance.ATTENDING)
         ));
     }
-    @Ignore
+
     @Test
     public void cyclicChangeYesToUnknown() {
         processFile("cyclic");
-        input.publish("A", true);
-        input.publish("B", true);
+        input.publish("Tyrion Lannister", true);
+        input.publish("Tommen Baratheon", true);
+        input.publish("Varys", true);
         verify(output).attendance(map(
-                entry("A", Attendance.UNKNOWN),
-                entry("B", Attendance.UNKNOWN),
-                entry("C", Attendance.UNKNOWN),
-                entry("D", Attendance.UNKNOWN),
-                entry("E", Attendance.UNKNOWN),
-                entry("F", Attendance.UNKNOWN),
-                entry("G", Attendance.UNKNOWN),
-                entry("H", Attendance.UNKNOWN),
-                entry("I", Attendance.UNKNOWN),
-                entry("J", Attendance.UNKNOWN),
-                entry("K", Attendance.UNKNOWN)
+                entry("Tyrion Lannister", Attendance.ATTENDING),
+                entry("Daenerys Targaryen", Attendance.PROBABLY_ATTENDING),
+                entry("Cersei Lannister", Attendance.PROBABLY_ATTENDING),
+                entry("Jaime Lannister", Attendance.PROBABLY_ATTENDING),
+                entry("Tommen Baratheon", Attendance.ATTENDING),
+                entry("Khal Drogo", Attendance.PROBABLY_ATTENDING),
+                entry("Ramsay Bolton", Attendance.PROBABLY_ATTENDING),
+                entry("Catelyn Stark", Attendance.UNKNOWN),
+                entry("Missandei", Attendance.UNKNOWN),
+                entry("Stannis Baratheon", Attendance.UNKNOWN),
+                entry("Varys", Attendance.ATTENDING)
         ));
 
-        input.publish("B", null);
+        input.publish("Tyrion Lannister", null);
         verify(output).attendance(map(
-                entry("A", Attendance.UNKNOWN),
-                entry("B", Attendance.UNKNOWN),
-                entry("C", Attendance.UNKNOWN),
-                entry("D", Attendance.UNKNOWN),
-                entry("E", Attendance.UNKNOWN),
-                entry("F", Attendance.UNKNOWN),
-                entry("G", Attendance.UNKNOWN),
-                entry("H", Attendance.UNKNOWN),
-                entry("I", Attendance.UNKNOWN),
-                entry("J", Attendance.UNKNOWN),
-                entry("K", Attendance.UNKNOWN)
+                entry("Tyrion Lannister", Attendance.UNKNOWN),
+                entry("Daenerys Targaryen", Attendance.UNKNOWN),
+                entry("Cersei Lannister", Attendance.PROBABLY_ATTENDING),
+                entry("Jaime Lannister", Attendance.PROBABLY_ATTENDING),
+                entry("Tommen Baratheon", Attendance.ATTENDING),
+                entry("Khal Drogo", Attendance.PROBABLY_ATTENDING),
+                entry("Ramsay Bolton", Attendance.PROBABLY_ATTENDING),
+                entry("Catelyn Stark", Attendance.UNKNOWN),
+                entry("Missandei", Attendance.UNKNOWN),
+                entry("Stannis Baratheon", Attendance.UNKNOWN),
+                entry("Varys", Attendance.ATTENDING)
         ));
 
-        input.publish("A", null);
+        input.publish("Tommen Baratheon", null);
         verify(output).attendance(map(
-                entry("A", Attendance.UNKNOWN),
-                entry("B", Attendance.UNKNOWN),
-                entry("C", Attendance.UNKNOWN),
-                entry("D", Attendance.UNKNOWN),
-                entry("E", Attendance.UNKNOWN),
-                entry("F", Attendance.UNKNOWN),
-                entry("G", Attendance.UNKNOWN),
-                entry("H", Attendance.UNKNOWN),
-                entry("I", Attendance.UNKNOWN),
-                entry("J", Attendance.UNKNOWN),
-                entry("K", Attendance.UNKNOWN)
+                entry("Tyrion Lannister", Attendance.UNKNOWN),
+                entry("Daenerys Targaryen", Attendance.UNKNOWN),
+                entry("Cersei Lannister", Attendance.UNKNOWN),
+                entry("Jaime Lannister", Attendance.UNKNOWN),
+                entry("Tommen Baratheon", Attendance.UNKNOWN),
+                entry("Khal Drogo", Attendance.UNKNOWN),
+                entry("Ramsay Bolton", Attendance.PROBABLY_ATTENDING),
+                entry("Catelyn Stark", Attendance.UNKNOWN),
+                entry("Missandei", Attendance.UNKNOWN),
+                entry("Stannis Baratheon", Attendance.UNKNOWN),
+                entry("Varys", Attendance.ATTENDING)
+        ));
+
+        input.publish("Varys", null);
+        verify(output).attendance(map(
+                entry("Tyrion Lannister", Attendance.UNKNOWN),
+                entry("Daenerys Targaryen", Attendance.UNKNOWN),
+                entry("Cersei Lannister", Attendance.UNKNOWN),
+                entry("Jaime Lannister", Attendance.UNKNOWN),
+                entry("Tommen Baratheon", Attendance.UNKNOWN),
+                entry("Khal Drogo", Attendance.UNKNOWN),
+                entry("Ramsay Bolton", Attendance.UNKNOWN),
+                entry("Catelyn Stark", Attendance.UNKNOWN),
+                entry("Missandei", Attendance.UNKNOWN),
+                entry("Stannis Baratheon", Attendance.UNKNOWN),
+                entry("Varys", Attendance.UNKNOWN)
         ));
 
 
     }
-    @Ignore
+
     @Test
     public void cyclicChangeNoToUnknown() {
         processFile("cyclic");
-        input.publish("A", false);
-        input.publish("B", false);
+        input.publish("Daenerys Targaryen", false);
+        input.publish("Missandei", false);
         verify(output).attendance(map(
-                entry("A", Attendance.UNKNOWN),
-                entry("B", Attendance.UNKNOWN),
-                entry("C", Attendance.UNKNOWN),
-                entry("D", Attendance.UNKNOWN),
-                entry("E", Attendance.UNKNOWN),
-                entry("F", Attendance.UNKNOWN),
-                entry("G", Attendance.UNKNOWN),
-                entry("H", Attendance.UNKNOWN),
-                entry("I", Attendance.UNKNOWN),
-                entry("J", Attendance.UNKNOWN),
-                entry("K", Attendance.UNKNOWN)
+                entry("Tyrion Lannister", Attendance.UNKNOWN),
+                entry("Daenerys Targaryen", Attendance.NOT_ATTENDING),
+                entry("Cersei Lannister", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("Jaime Lannister", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("Tommen Baratheon", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("Khal Drogo", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("Ramsay Bolton", Attendance.UNKNOWN),
+                entry("Catelyn Stark", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("Missandei", Attendance.NOT_ATTENDING),
+                entry("Stannis Baratheon", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("Varys", Attendance.UNKNOWN)
         ));
 
-        input.publish("B", null);
+        input.publish("Daenerys Targaryen", null);
         verify(output).attendance(map(
-                entry("A", Attendance.UNKNOWN),
-                entry("B", Attendance.UNKNOWN),
-                entry("C", Attendance.UNKNOWN),
-                entry("D", Attendance.UNKNOWN),
-                entry("E", Attendance.UNKNOWN),
-                entry("F", Attendance.UNKNOWN),
-                entry("G", Attendance.UNKNOWN),
-                entry("H", Attendance.UNKNOWN),
-                entry("I", Attendance.UNKNOWN),
-                entry("J", Attendance.UNKNOWN),
-                entry("K", Attendance.UNKNOWN)
+                entry("Tyrion Lannister", Attendance.UNKNOWN),
+                entry("Daenerys Targaryen", Attendance.UNKNOWN),
+                entry("Cersei Lannister", Attendance.UNKNOWN),
+                entry("Jaime Lannister", Attendance.UNKNOWN),
+                entry("Tommen Baratheon", Attendance.UNKNOWN),
+                entry("Khal Drogo", Attendance.UNKNOWN),
+                entry("Ramsay Bolton", Attendance.UNKNOWN),
+                entry("Catelyn Stark", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("Missandei", Attendance.NOT_ATTENDING),
+                entry("Stannis Baratheon", Attendance.PROBABLY_NOT_ATTENDING),
+                entry("Varys", Attendance.UNKNOWN)
         ));
 
-        input.publish("A", null);
+        input.publish("Missandei", null);
         verify(output).attendance(map(
-                entry("A", Attendance.UNKNOWN),
-                entry("B", Attendance.UNKNOWN),
-                entry("C", Attendance.UNKNOWN),
-                entry("D", Attendance.UNKNOWN),
-                entry("E", Attendance.UNKNOWN),
-                entry("F", Attendance.UNKNOWN),
-                entry("G", Attendance.UNKNOWN),
-                entry("H", Attendance.UNKNOWN),
-                entry("I", Attendance.UNKNOWN),
-                entry("J", Attendance.UNKNOWN),
-                entry("K", Attendance.UNKNOWN)
+                entry("Tyrion Lannister", Attendance.UNKNOWN),
+                entry("Daenerys Targaryen", Attendance.UNKNOWN),
+                entry("Cersei Lannister", Attendance.UNKNOWN),
+                entry("Jaime Lannister", Attendance.UNKNOWN),
+                entry("Tommen Baratheon", Attendance.UNKNOWN),
+                entry("Khal Drogo", Attendance.UNKNOWN),
+                entry("Ramsay Bolton", Attendance.UNKNOWN),
+                entry("Catelyn Stark", Attendance.UNKNOWN),
+                entry("Missandei", Attendance.UNKNOWN),
+                entry("Stannis Baratheon", Attendance.UNKNOWN),
+                entry("Varys", Attendance.UNKNOWN)
         ));
     }
 
+    @Test
+    public void largeInitAllToUnknown() {
+        processFile("large");
+        input.publish("0", null);
+        List<Map.Entry<String, Attendance>> entries = new ArrayList<>();
+        for(int i=0 ; i<500; i++)
+        {
+            entries.add(entry(String.valueOf(i), Attendance.UNKNOWN));
+        }
+        verify(output).attendance(mapFromList(entries));
 
+    }
 
+    @Test
+    public void largeDependencyIsCorrect() {
+        processFile("large");
+        input.publish("0", true);
+        List<Map.Entry<String, Attendance>> entries = new ArrayList<>();
+        entries.add(entry(String.valueOf(0), Attendance.ATTENDING));
+        for(int i=1 ; i<500; i++)
+        {
+            entries.add(entry(String.valueOf(i), Attendance.PROBABLY_ATTENDING));
+        }
+        verify(output).attendance(mapFromList(entries));
 
+        input.publish("0", null);
+        input.publish("1", false);
+        input.publish("2", true);
+        entries.clear();
+        entries.add(entry(String.valueOf(0), Attendance.UNKNOWN));
+        entries.add(entry(String.valueOf(1), Attendance.NOT_ATTENDING));
+        entries.add(entry(String.valueOf(2), Attendance.ATTENDING));
+        for(int i=3 ; i<500; i++)
+        {
+            switch (i%3)
+            {
+                case 0:
+                    entries.add(entry(String.valueOf(i), Attendance.UNKNOWN));
+                    break;
+                case 1:
+                    entries.add(entry(String.valueOf(i), Attendance.PROBABLY_NOT_ATTENDING));
+                    break;
+                case 2:
+                    entries.add(entry(String.valueOf(i), Attendance.PROBABLY_ATTENDING));
+                    break;
+            }
+        }
+        verify(output).attendance(mapFromList(entries));
+    }
+
+    @Test
+    public void largeRootChange() {
+        processFile("large");
+        input.publish("0", true);
+        List<Map.Entry<String, Attendance>> entries = new ArrayList<>();
+        entries.add(entry(String.valueOf(0), Attendance.ATTENDING));
+        for(int i=1 ; i<500; i++)
+        {
+            entries.add(entry(String.valueOf(i), Attendance.PROBABLY_ATTENDING));
+        }
+        verify(output).attendance(mapFromList(entries));
+
+        input.publish("0", false);
+        entries.clear();
+        entries.add(entry(String.valueOf(0), Attendance.NOT_ATTENDING));
+        for(int i=1 ; i<500; i++)
+        {
+            entries.add(entry(String.valueOf(i), Attendance.PROBABLY_NOT_ATTENDING));
+        }
+        verify(output).attendance(mapFromList(entries));
+
+        input.publish("0", null);
+        entries.clear();
+        for(int i=0 ; i<500; i++)
+        {
+            entries.add(entry(String.valueOf(i), Attendance.UNKNOWN));
+        }
+        verify(output).attendance(mapFromList(entries));
+
+    }
+
+    @Test
+    public void largeInnerVertexChange() {
+        processFile("large");
+        List<Map.Entry<String, Attendance>> entries = new ArrayList<>();
+        input.publish("1", false);
+        input.publish("2", true);
+        entries.add(entry(String.valueOf(0), Attendance.UNKNOWN));
+        entries.add(entry(String.valueOf(1), Attendance.NOT_ATTENDING));
+        entries.add(entry(String.valueOf(2), Attendance.ATTENDING));
+        for(int i=3 ; i<500; i++)
+        {
+            switch (i%3)
+            {
+                case 0:
+                    entries.add(entry(String.valueOf(i), Attendance.UNKNOWN));
+                    break;
+                case 1:
+                    entries.add(entry(String.valueOf(i), Attendance.PROBABLY_NOT_ATTENDING));
+                    break;
+                case 2:
+                    entries.add(entry(String.valueOf(i), Attendance.PROBABLY_ATTENDING));
+                    break;
+            }
+        }
+        verify(output).attendance(mapFromList(entries));
+
+        input.publish("3", false);
+        input.publish("1", true);
+        input.publish("2", null);
+        entries.clear();
+        entries.add(entry(String.valueOf(0), Attendance.UNKNOWN));
+        entries.add(entry(String.valueOf(1), Attendance.ATTENDING));
+        entries.add(entry(String.valueOf(2), Attendance.UNKNOWN));
+        entries.add(entry(String.valueOf(3), Attendance.NOT_ATTENDING));
+        for(int i=4 ; i<500; i++)
+        {
+            switch (i%3)
+            {
+                case 0:
+                    entries.add(entry(String.valueOf(i), Attendance.PROBABLY_NOT_ATTENDING));
+                    break;
+                case 1:
+                    entries.add(entry(String.valueOf(i), Attendance.PROBABLY_ATTENDING));
+                    break;
+                case 2:
+                    entries.add(entry(String.valueOf(i), Attendance.UNKNOWN));
+                    break;
+            }
+        }
+        verify(output).attendance(mapFromList(entries));
+    }
 }
