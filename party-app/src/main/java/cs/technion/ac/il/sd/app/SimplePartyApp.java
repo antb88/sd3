@@ -5,7 +5,8 @@ import com.google.inject.Inject;
 import cs.technion.ac.il.sd.Attendance;
 import cs.technion.ac.il.sd.Input;
 import cs.technion.ac.il.sd.Output;
-import library.graph.Graph;
+import cs.technion.ac.il.sd.library.Graph;
+
 
 import java.io.File;
 import java.util.HashMap;
@@ -21,7 +22,7 @@ public class SimplePartyApp implements PartyApp{
 
     private final Input input;
     private final Output output;
-    private final Graph<String> graph;
+    private final Graph<String, String> graph;
     private Map<String, Attendance> attendance;
     private Configuration configuration;
 
@@ -60,7 +61,7 @@ public class SimplePartyApp implements PartyApp{
 
     private SimplePartyApp buildGraph() {
         Set<String> invitees = configuration.getInvitees();
-        invitees.forEach(graph::addNode);
+        invitees.forEach(i -> graph.addVertex(i,i));
         invitees.forEach(this::addDependenciesToGraph);
         return this;
     }
@@ -98,7 +99,7 @@ public class SimplePartyApp implements PartyApp{
 
     private SimplePartyApp computeAll() {
         attendance.replaceAll(this::defaultAttendance);
-        graph.topologicSort(this::calculateAttendance);
+        graph.toposort(this::calculateAttendance);
         return this;
     }
 
